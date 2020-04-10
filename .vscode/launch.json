@@ -14,11 +14,25 @@
             "args": [],
             "cwd": "${workspaceFolder}/src/Conduit",
             "stopAtEntry": false,
+            "launchBrowser": {
+                "enabled": true,
+                "args": "${auto-detect-url}/swagger",
+                "windows": {
+                    "command": "cmd.exe",
+                    "args": "/C start ${auto-detect-url}"
+                },
+                "osx": {
+                    "command": "open"
+                },
+                "linux": {
+                    "command": "xdg-open"
+                }
+            }, 
             // Enable launching a web browser when ASP.NET Core starts. For more information: https://aka.ms/VSCode-CS-LaunchJson-WebBrowser
-            "serverReadyAction": {
-                "action": "openExternally",
-                "pattern": "^\\s*Now listening on:\\s+(https?://\\S+)"
-            },
+            // "serverReadyAction": {
+            //     "action": "openExternally",
+            //     "pattern": "^\\s*Now listening on:\\s+(https?://\\S+)"
+            // },
             "env": {
                 "ASPNETCORE_ENVIRONMENT": "Development"
             },
