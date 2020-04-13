@@ -13,6 +13,7 @@ namespace Conduit.IntegrationTests.Features.Users
         public async Task Expect_Login()
         {
             var salt = Guid.NewGuid().ToByteArray();
+
             var person = new Person
             {
                 Username = "username",
@@ -20,9 +21,11 @@ namespace Conduit.IntegrationTests.Features.Users
                 Hash = new PasswordHasher().Hash("password", salt),
                 Salt = salt
             };
+
+            // save person
             await InsertAsync(person);
 
-            var command = new Conduit.Features.Users.Login.Command()
+            var command = new Login.Command()
             {
                 User = new Login.UserData()
                 {
@@ -31,6 +34,7 @@ namespace Conduit.IntegrationTests.Features.Users
                 }
             };
 
+            // save user
             var user = await SendAsync(command);
 
             Assert.NotNull(user?.User);

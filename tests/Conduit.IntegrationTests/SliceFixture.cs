@@ -6,13 +6,14 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Serilog;
 
 namespace Conduit.IntegrationTests
 {
     public class SliceFixture : IDisposable
     {
-        static readonly IConfiguration Config;
+        //static readonly IConfiguration Config;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ServiceProvider _provider;
         // local database for testing
@@ -23,14 +24,22 @@ namespace Conduit.IntegrationTests
         ///
         /// - Add environment variable
         /// </summary>
-        static SliceFixture()
-        {
-            Config = new ConfigurationBuilder()
-               .AddEnvironmentVariables()
-               .SetBasePath(Directory.GetCurrentDirectory())
-               .AddJsonFile("appsettings.json")
-               .Build();
-        }
+        //static SliceFixture()
+        //{
+        //    Config = new ConfigurationBuilder()
+        //        .AddEnvironmentVariables()
+        //        .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development"}.json", optional: true)
+        //        .Build();
+        //}
+
+        public static IConfiguration Config { get; } = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            //.AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development"}.json", optional: true)
+            .Build();
+
+        public static readonly ILoggerFactory MyLoggerFactor = LoggerFactory.Create(builder => { builder.AddConsole(); });
+
 
         /// <summary> 
         /// Constructor
@@ -49,16 +58,21 @@ namespace Conduit.IntegrationTests
                 .CreateLogger();
 
 
-            Log.Information("--> SliceFixture()");
+            Log.Information("--> SliceFixture() " + DbName);
 
 
             // configure database
-            DbContextOptionsBuilder builder = new DbContextOptionsBuilder();
-            builder.UseInMemoryDatabase(DbName);
+            DbContextOptionsBuilder dbOption = new DbContextOptionsBuilder();
+
+
+            dbOption.EnableSensitiveDataLogging()
+                .UseInMemoryDatabase(DbName);
+   
 
             // create services for the database
             var services = new ServiceCollection();
-            services.AddSingleton(new ConduitContext(builder.Options));
+            ConduitContext context = new ConduitContext(dbOption.Options);
+            services.AddSingleton(context);
 
             // configure the app
             var startup = new Startup(Config);
@@ -72,8 +86,7 @@ namespace Conduit.IntegrationTests
 
             // load database
             GetDbContext().Database.EnsureCreated();
-
-
+            
             //Log.Logger = new LoggerConfiguration()
             //  .WriteTo.Console()
             //  .CreateLogger();
@@ -111,8 +124,6 @@ namespace Conduit.IntegrationTests
         /// <returns></returns>
         public Task<TResponse> SendAsync<TResponse>(IRequest<TResponse> request)
         {
-            Log.Information("--> Task<TResponse> SendAsync<TResponse>(IRequest<TResponse> request)");
-
             return ExecuteScopeAsync(sp =>
             {
                 var mediator = sp.GetService<IMediator>();
@@ -130,7 +141,6 @@ namespace Conduit.IntegrationTests
         /// <returns>mediator </returns>
         public Task SendAsync(IRequest request)
         {
-
             Log.Information("--> Task SendAsync(IRequest request)");
 
             return ExecuteScopeAsync(sp =>
@@ -142,6 +152,7 @@ namespace Conduit.IntegrationTests
         }
 
         /// <summary>
+        /// Save data
         /// 
         /// </summary>
         /// <param name="entities"></param>

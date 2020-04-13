@@ -28,6 +28,7 @@ namespace Conduit.IntegrationTests.Features.Users
             };
 
             var commandResult = await fixture.SendAsync(command);
+
             return commandResult.User;
         }
     }

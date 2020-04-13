@@ -83,6 +83,7 @@ namespace Conduit.IntegrationTests.Features.Articles
             };
 
             var article = await ArticleHelpers.CreateArticle(this, createArticleCmd);
+
             var dbArticle = await ExecuteDbContextAsync(
                 db => db.Articles.Include(a => a.ArticleTags)
                 .Where(d => d.Slug == article.Slug).SingleOrDefaultAsync()
